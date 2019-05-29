@@ -290,4 +290,4 @@ def generate_minimap_VHDL(file_name, offset, color):
 #cave_frame_c()
 
 #   generate mini map sprites for header
-generate_minimap_VHDL("VHDL_minimap.txt", 4863, 7)
+#generate_minimap_VHDL("VHDL_minimap.txt", 4863, 7)
