@@ -1,4 +1,4 @@
-1import numpy as np
+import numpy as np
 import cv2
 import pprint
 import ImageProcessingFunctions as IP
@@ -383,9 +383,9 @@ Mapcolors = []
         # br += dict[i]
     # return br
 
-# def rgb2hex(r,g,b):
-    # hex = "0x{:02x}{:02x}{:02x}".format(r,g,b)
-    # return hex
+def rgb2hex(r,g,b):
+    hex = "0x{:02x}{:02x}{:02x}".format(r,g,b)
+    return hex
 
 # def TestEnemieSprites():
     # rawEnemies = cv2.imread("C:\\Users\\Milorad Markovic\\Downloads\\NES - Zelda 1 Textures\\zelda-sprites-enemies-noalpha.png")
@@ -426,33 +426,33 @@ Mapcolors = []
     # return
 
 def TestNPCSprites():
-
-    npcs = cv2.imread("NES - The Legend of Zelda - NPCs.png") # nasi sprit-ovi, formira boje i matricu
-    IP.draw("NPCS Original", IP.enlarge(npcs, 5))
-
-    #npcs = npcs[0+4:16+4, 13:13+16]
-    IP.draw("NPCS Grandpa", IP.enlarge(npcs, 10))
-    
+    npcs = cv2.imread("grass_tile.png")
     NPCSColors= []
     NPCSColors= IP.getColors(npcs)
     for i in range(len(NPCSColors)):
-        print(rgb2hex(NPCSColors[i][0], NPCSColors[i][1], NPCSColors[i][2]))
+        print(str(NPCSColors[i][2]), str(NPCSColors[i][1]), str(NPCSColors[i][0]))
+    for k in range(1):
+	    npcs = cv2.imread("grass_tile.png")
+	    npcs = npcs[0:16,k*16:(k+1)*16]
 
-    matrix = IP.FillMatrixColor(NPCSColors, npcs)
+	    for i in range(len(NPCSColors)):
+		          print(rgb2hex(NPCSColors[i][2], NPCSColors[i][1], NPCSColors[i][0]))
+
+	    matrix = IP.FillMatrixColor(NPCSColors, npcs)
 
 
-    Smatrix = []
-    for i in range(3):
-        Smatrix.append([])
+	    Smatrix = []
+	    for i in range(3):
+		Smatrix.append([])
 
-    for i in range(16):
-        for j in range(len(matrix[0])):
-            Smatrix[j//16 + 16*(i//16)].append(matrix[i][j])
-    
-    print("\nCORRECTED MATRIX\n")
-    for i in range(len(Smatrix)):
-        print("{}, \n".format(Smatrix[i]))
-    
+	    for i in range(16):
+		for j in range(len(matrix[0])):
+		    Smatrix[j//16 + 16*(i//16)].append(matrix[i][j])
+
+	    print("\nCORRECTED MATRIX\n")
+
+	    print("{}, \n".format(Smatrix[0]))
+
 
 
 
