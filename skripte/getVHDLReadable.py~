@@ -289,7 +289,7 @@ def generate_minimap_VHDL(file_name, offset, color):
 #mario sprites
 #character_sprites_to_VHDL(mario, "mario_sprites.txt", 1727, 52)
 #trava sprites
-character_sprites_to_VHDL(deblo, "deblo_sprite.txt", 319, 46)
+character_sprites_to_VHDL(red_car, "red_car_sprite.txt", 447, 20)
 
 
 #   Numbers and letters     -   the functions read only certain letters becaouse there is not enough memory in ram.vhd
