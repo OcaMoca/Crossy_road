@@ -723,6 +723,8 @@ architecture arch of ram is
      
        
                 --  sprite 0
+        
+                --  sprite 0
         6992 => x"07070707",		-- colors: 7, 7, 7, 7
         6993 => x"07070707",		-- colors: 7, 7, 7, 7
         6994 => x"07070707",		-- colors: 7, 7, 7, 7
