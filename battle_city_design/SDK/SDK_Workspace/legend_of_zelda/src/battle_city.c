@@ -24,7 +24,7 @@
 
 /*      FRAME       */
 #define FRAME_BASE_ADDRESS			7392 // 	old: 7392	,	new: 7284		FRAME_OFFSET in battle_city.vhd
-#define SIDE_PADDING				12
+#define SIDE_PADDING				10
 #define VERTICAL_PADDING			7
 #define INITIAL_FRAME_X				7
 #define INITIAL_FRAME_Y				7
@@ -294,9 +294,9 @@ static void write_introduction() {
 }
 
 void load_frame( direction_t dir ) {
-	chhar_delete();
+	//chhar_delete();
 	//initialize_enemy(overw_y * overw_x);
-	if( !inCave ) {
+	/*if( !inCave ) {
 		switch( dir ) {
 			case DIR_LEFT:
 				overw_x = ( --overw_x < 0 ) ? 0 : overw_x;
@@ -329,10 +329,10 @@ void load_frame( direction_t dir ) {
 		} else {
 			frame = CAVE;
 		}
-	}
+	}*/
 
     /*    checking if there should be enemies on the current frame     */
-    int i;
+    /*int i;
     if (!inCave) {
     	int frame_index = overw_y * OVERWORLD_HORIZONTAL + overw_x;
 		for ( i = 0; i < ENEMY_FRAMES_NUM; i++ ){
@@ -344,20 +344,19 @@ void load_frame( direction_t dir ) {
 				enemy_exists = 0;
 			}
 		}
-    }
+    }*/
 
     /*      loading next frame into memory      */
-	set_frame_palette();
-	int x,y;
-	long int addr;
-	for ( y = 0; y < FRAME_HEIGHT; y++ ) {
-		for ( x = 0; x < FRAME_WIDTH; x++ ) {
-			addr = XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * ( FRAME_BASE_ADDRESS + y * ( SIDE_PADDING + FRAME_WIDTH + SIDE_PADDING ) + x );
-			Xil_Out32( addr, frame[ y * FRAME_WIDTH + x ] );
+	//set_frame_palette();
+		frame = overworld;
+		int x,y;
+		long int addr;
+		for ( y = 0; y < FRAME_HEIGHT; y++ ) {
+			for ( x = 0; x < FRAME_WIDTH; x++ ) {
+				addr = XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * (SCREEN_BASE_ADDRESS + (y+VERTICAL_PADDING)* ( SIDE_PADDING + FRAME_WIDTH + SIDE_PADDING ) + x + SIDE_PADDING);
+				Xil_Out32( addr, overworld[ y * FRAME_WIDTH + x ] );
+			}
 		}
-	}
-
-
 }
 
 /*      setting the correct palette for the current frame     */
@@ -784,9 +783,9 @@ void reset_memory() {
 		Xil_Out32( addr, SPRITES[10] );             // SPRITES[10] is a black square
 	}
 
-	for ( i = 0; i <= 20; i += 2 ) {
+	/*for ( i = 0; i <= 20; i += 2 ) {
 		Xil_Out32( XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * ( REGS_BASE_ADDRESS + i ), (unsigned int) 0x0F000000);
-	}
+	}*/
 }
 
 bool link_move(characters * link, characters* sword, direction_t dir) {
@@ -1144,14 +1143,14 @@ void battle_city() {
 	overw_y = INITIAL_FRAME_Y;
     load_frame( DIR_STILL );
     HEALTH = MAX_HEALTH;
-    set_header();
+    //set_header();
 
 	link.x = INITIAL_LINK_POSITION_X;
 	link.y = INITIAL_LINK_POSITION_Y;
 	link.sprite = LINK_SPRITES_OFFSET;
 	sword.active = false;
 
-	chhar_spawn(&link, 0);
+	//chhar_spawn(&link, 0);
 
 	while (1) {
 		int rnd =  random_number() % 100;
@@ -1186,7 +1185,7 @@ void battle_city() {
 				ghost_move(&ghost, rnd);
 		}
 
-		link_move(&link, &sword, d);
+		//link_move(&link, &sword, d);
 
 	}
 }
