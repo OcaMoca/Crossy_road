@@ -28,8 +28,8 @@
 #define VERTICAL_PADDING			7
 #define INITIAL_FRAME_X				7
 #define INITIAL_FRAME_Y				7
-#define INITIAL_KIRBY_POSITION_X    200 + 64
-#define INITIAL_KIRBY_POSITION_Y    270
+#define INITIAL_KIRBY_POSITION_X    257
+#define INITIAL_KIRBY_POSITION_Y    328
 
 /*      LINK SPRITES START ADDRESS - to move to next add 64    */
 #define LINK_SPRITES_OFFSET             255		//	old: 5172	,	new: 5648
@@ -110,12 +110,58 @@ int last = 0; //last state link was in before current iteration (if he is walkin
 /*		 ACTIVE FRAME		*/
 unsigned short* frame;
 
+
+
+
+
+characters red_car_1 = {
+		0,		// x
+		0,		// y
+		DIR_RIGHT, 	             		// dir
+		0x01BF,							// type - sprite address in ram.vhdl
+		true,                			// active
+		ENEMY_2_REG_L,            		// reg_l
+	    ENEMY_2_REG_H             		// reg_h
+		};
+
+characters red_car_2 = {
+		0,		// x
+		0,		// y
+		DIR_RIGHT, 	             		// dir
+		0x01FF,							// type - sprite address in ram.vhdl
+		true,                			// active
+		ENEMY_3_REG_L,            		// reg_l
+	    ENEMY_3_REG_H             		// reg_h
+		};
+
+characters blue_car_1 = {
+		0,		// x
+		0,		// y
+		DIR_LEFT, 	             		// dir
+		0x023F,							// type - sprite address in ram.vhdl
+		true,                			// active
+		ENEMY_4_REG_L,            		// reg_l
+	    ENEMY_4_REG_H             		// reg_h
+		};
+
+characters blue_car_2 = {
+		0,		// x
+		0,		// y
+		DIR_LEFT, 	             		// dir
+		0x027F,							// type - sprite address in ram.vhdl
+		true,                			// active
+		ENEMY_5_REG_L,            		// reg_l
+	    ENEMY_5_REG_H             		// reg_h
+		};
+
+
+
+
 characters link = { 
 		INITIAL_KIRBY_POSITION_X,		// x
 		INITIAL_KIRBY_POSITION_Y,		// y
-		DIR_DOWN, 	             		// dir
-		//0x0DFF,						// type - sprite address in ram.vhdl
-		0x00FF,
+		DIR_LEFT, 	             		// dir
+		0x00FF,  						// type - sprite address in ram.vhdl
 		true,                			// active
 		LINK_REG_L,            			// reg_l
 		LINK_REG_H             			// reg_h
@@ -356,7 +402,8 @@ void load_frame( direction_t dir ) {
 		for ( y = 0; y < FRAME_HEIGHT; y++ ) {
 			for ( x = 0; x < FRAME_WIDTH; x++ ) {
 				addr = XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * (SCREEN_BASE_ADDRESS + (y+VERTICAL_PADDING)* ( SIDE_PADDING + FRAME_WIDTH + SIDE_PADDING ) + x + SIDE_PADDING);
-				Xil_Out32( addr, frame[ y * FRAME_WIDTH + x ] );
+				Xil_Out32( addr, frame
+						[ y * FRAME_WIDTH + x ] );
 			}
 		}
 }
@@ -1165,7 +1212,7 @@ bool kirby_move(characters * kirby, direction_t direction) {
 	}
 
 	if(direction == DIR_RIGHT){
-		if(x < 9*16){
+		if(x > 29*16){
 			kirby->x = x;
 		}else{
 			x++;
@@ -1174,7 +1221,7 @@ bool kirby_move(characters * kirby, direction_t direction) {
 	}
 
 	if(direction == DIR_LEFT){
-		if(x > 29*16){
+		if(x < 10*16){
 			kirby->x = x;
 		}else{
 			x--;
@@ -1186,11 +1233,45 @@ bool kirby_move(characters * kirby, direction_t direction) {
 	chhar_spawn(kirby, 0);
 
 
-	for(i = 0; i < 100000; i++);
-
 	return false;
 }
 
+void car_move(unsigned int x1, unsigned int x2) {
+	int i;
+
+	blue_car_1.x = x2;
+	blue_car_1.y = 13*16;
+
+	blue_car_2.x = x2+16;
+	blue_car_2.y = 13*16;
+
+	red_car_1.x = x1;
+	red_car_1.y = 10*16;
+
+	red_car_2.x = x1+16;
+	red_car_2.y = 10*16;
+
+	chhar_spawn(&red_car_1, 0);
+	chhar_spawn(&red_car_2, 0);
+
+	chhar_spawn(&blue_car_1, 0);
+	chhar_spawn(&blue_car_2, 0);
+
+
+}
+
+
+
+
+void car_animation(){
+
+	int x, y, i;
+
+	for(x = 10*16, y = 28*16; x < 28*16, y > 10*16; x++, y--){
+		car_move(x,y);
+	}
+
+}
 void battle_city() {
 	unsigned int buttons;
     
@@ -1205,11 +1286,15 @@ void battle_city() {
 	link.x = INITIAL_KIRBY_POSITION_X;
 	link.y = INITIAL_KIRBY_POSITION_Y;
 	link.sprite = LINK_SPRITES_OFFSET;
-	sword.active = false;
+	//sword.active = false;
+
 
 	chhar_spawn(&link, 0);
+	//chhar_spawn(&red_car, 0);
 
 	while (1) {
+
+
 		int rnd =  random_number() % 100;
 		int rnd1 = (random_number() % 1000) / 10;
 		int rnd2 = (random_number() % 10000) / 100;
@@ -1229,6 +1314,7 @@ void battle_city() {
 			d = DIR_ATTACK;
 		}
 
+
 		/*if(enemy_exists == 1 && !inCave) {
 			if(octorok1.active)
 				enemy_move(&octorok1, rnd);
@@ -1243,7 +1329,18 @@ void battle_city() {
 		}*/
 
 		//link_move(&link, &sword, d);
-		kirby_move(&link, d);
 
+		kirby_move(&link, d);
+		//car_animation();
+
+		int i;
+		for(i = 0; i < 100000; i++);
 	}
+
+
+
+
+
+
+
 }
