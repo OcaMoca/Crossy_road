@@ -9,7 +9,9 @@
 
 /*          COLOR PALETTE - base addresses in ram.vhd         */
 #define FRAME_COLORS_OFFSET         0
+//#define FRAME_COLORS_OFFSET         7
 #define LINK_COLORS_OFFSET          8
+//#define LINK_COLORS_OFFSET          0
 #define ENEMY_COLORS_OFFSET         35
 
 /*		SCREEN PARAMETERS		 - in this case, "screen" stands for one full-screen picture	 */
@@ -32,7 +34,7 @@
 #define INITIAL_LINK_POSITION_Y		270
 
 /*      LINK SPRITES START ADDRESS - to move to next add 64    */
-#define LINK_SPRITES_OFFSET             5648		//	old: 5172	,	new: 5648
+#define LINK_SPRITES_OFFSET             255		//	old: 5172	,	new: 5648
 #define SWORD_SPRITE                    LINK_SPRITES_OFFSET + 14*64			//6068		//	old: 7192	,	new: 7124
 #define LINK_STEP						10
 
@@ -67,12 +69,12 @@
 #define ENEMY_6_REG_H                  15
 #define ENEMY_7_REG_L                  0
 #define ENEMY_7_REG_H                  1
-#define GRANDPA_REG_L					16
-#define GRANDPA_REG_H	                17
+#define GRANDPA_REG_L				   16
+#define GRANDPA_REG_H	               17
 
-#define MAX_HEALTH						8
+#define MAX_HEALTH					   8
 
-#define ENEMY_FRAMES_NUM 			34
+#define ENEMY_FRAMES_NUM 			   34
 /*			contains the indexes of frames in overworld which have enemies  	*/
 bool ENEMY_FRAMES[] = {32, 33, 45, 48, 49, 55, 56, 62, 64, 65, 68, 73, 76, 79,
 					   84, 85, 86, 87, 88, 90, 95, 99, 100, 101, 102, 103, 104,
@@ -114,7 +116,8 @@ characters link = {
 		INITIAL_LINK_POSITION_X,		// x
 		INITIAL_LINK_POSITION_Y,		// y
 		DIR_DOWN, 	             		// dir
-		0x0DFF,							// type - sprite address in ram.vhdl
+		//0x0DFF,							// type - sprite address in ram.vhdl
+		0x00FF,
 		true,                			// active
 		LINK_REG_L,            			// reg_l
 		LINK_REG_H             			// reg_h
@@ -192,7 +195,8 @@ characters ghost = {
 		};
 
 
-int walkables[21] = {0, 2, 6, 10, 22, 27, 28, 29, 33, 34, 35, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49};
+//int walkables[21] = {0, 2, 6, 10, 22, 27, 28, 29, 33, 34, 35, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49};
+int walkables[4] = {0, 1, 2, 3};
 
 /*      indexes of the active frame in overworld        */
 int overw_x;
@@ -294,7 +298,7 @@ static void write_introduction() {
 }
 
 void load_frame( direction_t dir ) {
-	//chhar_delete();
+	chhar_delete();
 	//initialize_enemy(overw_y * overw_x);
 	/*if( !inCave ) {
 		switch( dir ) {
@@ -317,19 +321,19 @@ void load_frame( direction_t dir ) {
 
 		frame = overworld[ overw_y * OVERWORLD_HORIZONTAL + overw_x ];
 		set_minimap();
-	} else {
+	} else {*/
 		if ( dir == DIR_DOWN ) {
 			frame = overworld[ overw_y * OVERWORLD_HORIZONTAL + overw_x ];
-			inCave = false;
-			delete_sword(&grandpa);
+			//inCave = false;
+			//delete_sword(&grandpa);
 			chhar_delete();
-			if ( overw_x == INITIAL_FRAME_X && overw_y == INITIAL_FRAME_Y ) {
+			/*-if ( overw_x == INITIAL_FRAME_X && overw_y == INITIAL_FRAME_Y ) {
 				delete_sword(&sword);
 			}
 		} else {
 			frame = CAVE;
-		}
-	}*/
+		}*/
+	}
 
     /*    checking if there should be enemies on the current frame     */
     /*int i;
@@ -780,7 +784,7 @@ void reset_memory() {
 
 	for( i = 0; i < SCR_WIDTH*SCR_HEIGHT; i++ ) {
 		addr = XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * ( SCREEN_BASE_ADDRESS + i );
-		Xil_Out32( addr, SPRITES[10] );             // SPRITES[10] is a black square
+		Xil_Out32( addr, SPRITES[3] );             // SPRITES[10] is a black square
 	}
 
 	/*for ( i = 0; i <= 20; i += 2 ) {
@@ -797,7 +801,7 @@ bool link_move(characters * link, characters* sword, direction_t dir) {
 	int blocked_sword = 0; //0 false - not blocked, 1 true - blocked
 
 	//+/-28 instead of 32 because of sprite graphic
-	if ((link->x >= (( SIDE_PADDING + FRAME_WIDTH ) * SPRITE_SIZE - 28) && link->sprite ==  LINK_SPRITES_OFFSET + 64 * 3) || //if right edge and link is right faced
+	/*if ((link->x >= (( SIDE_PADDING + FRAME_WIDTH ) * SPRITE_SIZE - 28) && link->sprite ==  LINK_SPRITES_OFFSET + 64 * 3) || //if right edge and link is right faced
 		(link->x >= (( SIDE_PADDING + FRAME_WIDTH ) * SPRITE_SIZE - 28) && link->sprite ==  LINK_SPRITES_OFFSET + 64 * 4) ||
 		((link->x < SIDE_PADDING * SPRITE_SIZE + 20) && link->sprite == LINK_SPRITES_OFFSET + 64 * 16) || //if left edge and link is left faced
 		((link->x < SIDE_PADDING * SPRITE_SIZE + 20) && link->sprite == LINK_SPRITES_OFFSET + 64 * 17) ||
@@ -807,19 +811,19 @@ bool link_move(characters * link, characters* sword, direction_t dir) {
 		((link->y < SIDE_PADDING * SPRITE_SIZE + 16) && link->sprite == LINK_SPRITES_OFFSET + 64 * 15) )
 	{
 		blocked_sword = 1;
-	}
+	}*/
 
-	if(!sword->active && inCave && ((sword->x-8 < link->x) && (link->x < sword->x+8))
+	/*if(!sword->active && inCave && ((sword->x-8 < link->x) && (link->x < sword->x+8))
 			&& ((sword->y-8 < link->y)&& (link->y < sword->y))
 			&&  overw_x == INITIAL_FRAME_X && overw_y == INITIAL_FRAME_Y )
 	{
 		pick_up_sword();
-	}
+	}*/
 
 	/*      change frame if on the edge     */
     if (link->x > ( ( SIDE_PADDING + FRAME_WIDTH ) * SPRITE_SIZE  - SPRITE_SIZE)){
     	link->x = overw_x == OVERWORLD_HORIZONTAL - 1? link->x-1 : SIDE_PADDING * SPRITE_SIZE;
-    	load_frame( DIR_RIGHT );
+    	//load_frame( DIR_RIGHT );
     	return false;
 	}
     if ( link->y > ( VERTICAL_PADDING + FRAME_HEIGHT + HEADER_HEIGHT - 1 ) * SPRITE_SIZE ) {
@@ -829,17 +833,17 @@ bool link_move(characters * link, characters* sword, direction_t dir) {
     	} else {
     		link->y = overw_y == OVERWORLD_VERTICAL - 1 ? link->y - 1 : ( HEADER_HEIGHT + VERTICAL_PADDING ) * SPRITE_SIZE;
     	}
-    	load_frame( DIR_DOWN );
+    	//load_frame( DIR_DOWN );
     	return false;
     }
     if ( link->y < SIDE_PADDING * SPRITE_SIZE ) {
     	link->y = overw_y == 0 ? link->y+1 : ( HEADER_HEIGHT + VERTICAL_PADDING + FRAME_HEIGHT - 1 ) * SPRITE_SIZE;
-    	load_frame( DIR_UP );
+    	//load_frame( DIR_UP );
 		return false;
     }
     if ( link->x < SIDE_PADDING * SPRITE_SIZE ) {
     	link->x = overw_x == 0 ? link->x + 1 : ( SIDE_PADDING + FRAME_WIDTH - 1 ) * SPRITE_SIZE;
-    	load_frame( DIR_LEFT );
+    	//load_frame( DIR_LEFT );
 		return false;
 	}
 
@@ -853,32 +857,32 @@ bool link_move(characters * link, characters* sword, direction_t dir) {
 		if ( counter % LINK_STEP == 0 ) {
 			last = ( last == 16 ) ? 17 : 16;
 		}
-		lasting_attack = 0;
-		link->sprite = LINK_SPRITES_OFFSET + 64 * last;
+		/*lasting_attack = 0;
+		link->sprite = LINK_SPRITES_OFFSET + 64 * last;*/
 		counter++;
 	} else if ( dir == DIR_RIGHT ) {
 		x++;
 		if ( counter % LINK_STEP == 0 ) {
 			last = (last == 3) ? 4 : 3;
 		}
-		lasting_attack = 0;
-		link->sprite =  LINK_SPRITES_OFFSET + 64 * last;
+		/*lasting_attack = 0;
+		link->sprite =  LINK_SPRITES_OFFSET + 64 * last;*/
 		counter++;
 	} else if ( dir == DIR_UP ) {
 		y--;
 		if ( counter % LINK_STEP == 0 ) {
 			last = (last == 2) ? 15 : 2;
 		}
-		lasting_attack = 0;
-		link->sprite = LINK_SPRITES_OFFSET + 64 * last;
+		/*lasting_attack = 0;
+		link->sprite = LINK_SPRITES_OFFSET + 64 * last;*/
 		counter++;
 	} else if ( dir == DIR_DOWN ) {
 		y++;
 		if ( counter % LINK_STEP == 0) {
 			last = (last == 0) ? 1 : 0;
 		}
-		lasting_attack = 0;
-		link->sprite = LINK_SPRITES_OFFSET + 64 * last;
+		/*lasting_attack = 0;
+		link->sprite = LINK_SPRITES_OFFSET + 64 * last;*/
 		counter++;
 	} else if ( dir == DIR_ATTACK && sword->active){
 		switch( last ){
@@ -934,7 +938,7 @@ bool link_move(characters * link, characters* sword, direction_t dir) {
 		}
 
 		//kill enemy
-		if(((octorok1.x-8 < sword->x) && (sword->x < octorok1.x+8))
+		/*if(((octorok1.x-8 < sword->x) && (sword->x < octorok1.x+8))
 			&& ((octorok1.y-8 < sword->y)&& (sword->y < octorok1.y+8)) && octorok1.active)
 		{
 				octorok1.active = false;
@@ -962,30 +966,30 @@ bool link_move(characters * link, characters* sword, direction_t dir) {
 				delete_sword(&octorok4);
 				bombs++;
 				set_pickups();
-		}
+		}*/
 
 
-		if ( lasting_attack != 1 ){
+		/*if ( lasting_attack != 1 ){
 			Xil_Out32(
 					XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * ( REGS_BASE_ADDRESS + link->reg_l ),
 					(unsigned int) 0x8F000000 | (unsigned int) link->sprite);
 			Xil_Out32(
 					XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * ( REGS_BASE_ADDRESS + link->reg_h ),
-					 ( link->y << 16) | link->x);      //  the higher 2 bytes represent the row (y)
-		}
+					 ( link->y << 16) | link->x);*/      //  the higher 2 bytes represent the row (y)
+		//}
 
-		if (blocked_sword == 0) {
-			for ( i =0; i <90000; i++ );             //      delay
+		//if (blocked_sword == 0) {
+			/*for ( i =0; i <90000; i++ );             //      delay
 
 			if ( lasting_attack != 1 ){
 				chhar_spawn( sword, sword_rotation );
 			}
 			if ( dir == DIR_ATTACK) {
 				lasting_attack = 1;
-			}
+			}*/
 
-			for ( i =0; i <15000; i++);             //      delay
-		}
+			//for ( i =0; i <15000; i++);             //      delay
+		//}
 		/*   After a short break (representing the attack animation), go back to standing sprite facing the same direction    */
 		if ( last ==16 || last == 17 ) { 						//left
 			link->sprite = LINK_SPRITES_OFFSET + 64 * 17;
@@ -1150,7 +1154,7 @@ void battle_city() {
 	link.sprite = LINK_SPRITES_OFFSET;
 	sword.active = false;
 
-	//chhar_spawn(&link, 0);
+	chhar_spawn(&link, 0);
 
 	while (1) {
 		int rnd =  random_number() % 100;
@@ -1185,7 +1189,7 @@ void battle_city() {
 				ghost_move(&ghost, rnd);
 		}
 
-		//link_move(&link, &sword, d);
+		link_move(&link, &sword, d);
 
 	}
 }

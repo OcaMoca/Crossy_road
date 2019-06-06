@@ -37,7 +37,7 @@ architecture arch of ram is
 --kirby colors
 
 			0 => x"00000000",
-			1=> x"00ea8bff",
+			1 => x"00ea8bff",
 			2 => x"00e98afe",
 			3 => x"003d3d40",
 			4 => x"00811699",
