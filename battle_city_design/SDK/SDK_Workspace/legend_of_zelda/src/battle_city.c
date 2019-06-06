@@ -8,10 +8,8 @@
 #include <string.h>
 
 /*          COLOR PALETTE - base addresses in ram.vhd         */
-#define FRAME_COLORS_OFFSET         0
-//#define FRAME_COLORS_OFFSET         7
-#define LINK_COLORS_OFFSET          8
-//#define LINK_COLORS_OFFSET          0
+#define FRAME_COLORS_OFFSET         7
+#define KIRBY_COLORS_OFFSET         0
 #define ENEMY_COLORS_OFFSET         35
 
 /*		SCREEN PARAMETERS		 - in this case, "screen" stands for one full-screen picture	 */
@@ -25,13 +23,13 @@
 #define HEADER_HEIGHT				5
 
 /*      FRAME       */
-#define FRAME_BASE_ADDRESS			7392 // 	old: 7392	,	new: 7284		FRAME_OFFSET in battle_city.vhd
+#define FRAME_BASE_ADDRESS			1000 // 	old: 7392	,	new: 7284		FRAME_OFFSET in battle_city.vhd
 #define SIDE_PADDING				10
 #define VERTICAL_PADDING			7
 #define INITIAL_FRAME_X				7
 #define INITIAL_FRAME_Y				7
-#define INITIAL_LINK_POSITION_X		200 + 64
-#define INITIAL_LINK_POSITION_Y		270
+#define INITIAL_KIRBY_POSITION_X    200 + 64
+#define INITIAL_KIRBY_POSITION_Y    270
 
 /*      LINK SPRITES START ADDRESS - to move to next add 64    */
 #define LINK_SPRITES_OFFSET             255		//	old: 5172	,	new: 5648
@@ -39,7 +37,7 @@
 #define LINK_STEP						10
 
 /*      ENEMIE SPRITES START ADDRESS - to move to next add 64    */
-#define ENEMIE_SPRITES_OFFSET          5072			//	old: 4596	,	new: 5072
+#define ENEMIE_SPRITES_OFFSET           5072			//	old: 4596	,	new: 5072
 #define ENEMY_STEP						10
 #define GHOST_SPRITES_OFFSET			5072 + 64*5
 
@@ -113,10 +111,10 @@ int last = 0; //last state link was in before current iteration (if he is walkin
 unsigned short* frame;
 
 characters link = { 
-		INITIAL_LINK_POSITION_X,		// x
-		INITIAL_LINK_POSITION_Y,		// y
+		INITIAL_KIRBY_POSITION_X,		// x
+		INITIAL_KIRBY_POSITION_Y,		// y
 		DIR_DOWN, 	             		// dir
-		//0x0DFF,							// type - sprite address in ram.vhdl
+		//0x0DFF,						// type - sprite address in ram.vhdl
 		0x00FF,
 		true,                			// active
 		LINK_REG_L,            			// reg_l
@@ -124,8 +122,8 @@ characters link = {
 		};
 
 characters sword = {
-		INITIAL_LINK_POSITION_X,		// x
-		INITIAL_LINK_POSITION_Y,		// y
+		INITIAL_KIRBY_POSITION_X,		// x
+		INITIAL_KIRBY_POSITION_Y,		// y
 		DIR_LEFT,              			// dir
 		SWORD_SPRITE,  					// type
 		false,                			// active
@@ -196,7 +194,7 @@ characters ghost = {
 
 
 //int walkables[21] = {0, 2, 6, 10, 22, 27, 28, 29, 33, 34, 35, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49};
-int walkables[4] = {0, 1, 2, 3};
+int walkables[3] = {0, 1, 2};
 
 /*      indexes of the active frame in overworld        */
 int overw_x;
@@ -298,7 +296,7 @@ static void write_introduction() {
 }
 
 void load_frame( direction_t dir ) {
-	chhar_delete();
+	//chhar_delete();
 	//initialize_enemy(overw_y * overw_x);
 	/*if( !inCave ) {
 		switch( dir ) {
@@ -322,18 +320,18 @@ void load_frame( direction_t dir ) {
 		frame = overworld[ overw_y * OVERWORLD_HORIZONTAL + overw_x ];
 		set_minimap();
 	} else {*/
-		if ( dir == DIR_DOWN ) {
-			frame = overworld[ overw_y * OVERWORLD_HORIZONTAL + overw_x ];
+		//if ( dir == DIR_DOWN ) {
+			//frame = overworld[ overw_y * OVERWORLD_HORIZONTAL + overw_x ];
 			//inCave = false;
 			//delete_sword(&grandpa);
-			chhar_delete();
+			//chhar_delete();
 			/*-if ( overw_x == INITIAL_FRAME_X && overw_y == INITIAL_FRAME_Y ) {
 				delete_sword(&sword);
 			}
 		} else {
 			frame = CAVE;
 		}*/
-	}
+	//}
 
     /*    checking if there should be enemies on the current frame     */
     /*int i;
@@ -358,7 +356,7 @@ void load_frame( direction_t dir ) {
 		for ( y = 0; y < FRAME_HEIGHT; y++ ) {
 			for ( x = 0; x < FRAME_WIDTH; x++ ) {
 				addr = XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * (SCREEN_BASE_ADDRESS + (y+VERTICAL_PADDING)* ( SIDE_PADDING + FRAME_WIDTH + SIDE_PADDING ) + x + SIDE_PADDING);
-				Xil_Out32( addr, overworld[ y * FRAME_WIDTH + x ] );
+				Xil_Out32( addr, frame[ y * FRAME_WIDTH + x ] );
 			}
 		}
 }
@@ -1013,7 +1011,7 @@ bool link_move(characters * link, characters* sword, direction_t dir) {
         	if(!sword->active){
 				set_sword();
 		        set_grandpa();
-				write_introduction();
+				//write_introduction();
 			}
 		}
 	    /*		skip collision detection if on the bottom of the frame 			*/
@@ -1138,6 +1136,61 @@ void set_fire() {
 	Xil_Out32(addr,	fire2);
 }
 
+/* logika kretanja --> zamniti za link_move dole u battle_city kad bude gotovo */
+
+bool kirby_move(characters * kirby, direction_t direction) {
+	unsigned int x;
+	unsigned int y;
+	int i;
+
+	x = kirby->x;
+	y = kirby->y;
+
+	if(direction == DIR_UP){
+		if(y < 7*16){
+			kirby->y = y;
+		}else{
+			y--;
+			kirby->y = y;
+		}
+	}
+
+	if(direction == DIR_DOWN){
+		if(y > 21*16){
+			kirby->y = y;
+		}else{
+			y++;
+			kirby->y = y;
+		}
+	}
+
+	if(direction == DIR_RIGHT){
+		if(x < 9*16){
+			kirby->x = x;
+		}else{
+			x++;
+			kirby->x = x;
+		}
+	}
+
+	if(direction == DIR_LEFT){
+		if(x > 29*16){
+			kirby->x = x;
+		}else{
+			x--;
+			kirby->x = x;
+		}
+	}
+
+
+	chhar_spawn(kirby, 0);
+
+
+	for(i = 0; i < 100000; i++);
+
+	return false;
+}
+
 void battle_city() {
 	unsigned int buttons;
     
@@ -1149,8 +1202,8 @@ void battle_city() {
     HEALTH = MAX_HEALTH;
     //set_header();
 
-	link.x = INITIAL_LINK_POSITION_X;
-	link.y = INITIAL_LINK_POSITION_Y;
+	link.x = INITIAL_KIRBY_POSITION_X;
+	link.y = INITIAL_KIRBY_POSITION_Y;
 	link.sprite = LINK_SPRITES_OFFSET;
 	sword.active = false;
 
@@ -1176,7 +1229,7 @@ void battle_city() {
 			d = DIR_ATTACK;
 		}
 
-		if(enemy_exists == 1 && !inCave) {
+		/*if(enemy_exists == 1 && !inCave) {
 			if(octorok1.active)
 				enemy_move(&octorok1, rnd);
 			if (octorok2.active)
@@ -1187,9 +1240,10 @@ void battle_city() {
 				enemy_move(&octorok4, rnd3);
 			if (ghost.active)
 				ghost_move(&ghost, rnd);
-		}
+		}*/
 
-		link_move(&link, &sword, d);
+		//link_move(&link, &sword, d);
+		kirby_move(&link, d);
 
 	}
 }
