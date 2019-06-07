@@ -6,6 +6,7 @@
 #include <math.h>
 #include "sprites.h"
 #include <string.h>
+#include <stdio.h>
 
 /*          COLOR PALETTE - base addresses in ram.vhd         */
 #define FRAME_COLORS_OFFSET         7
@@ -115,8 +116,8 @@ unsigned short* frame;
 
 
 characters red_car_1 = {
-		0,		// x
-		0,		// y
+		10*16,		// x
+		13*16,		// y
 		DIR_RIGHT, 	             		// dir
 		0x01BF,							// type - sprite address in ram.vhdl
 		true,                			// active
@@ -125,8 +126,8 @@ characters red_car_1 = {
 		};
 
 characters red_car_2 = {
-		0,		// x
-		0,		// y
+		9*16,		// x
+		13*16,		// y
 		DIR_RIGHT, 	             		// dir
 		0x01FF,							// type - sprite address in ram.vhdl
 		true,                			// active
@@ -136,7 +137,7 @@ characters red_car_2 = {
 
 characters blue_car_1 = {
 		0,		// x
-		0,		// y
+		10*16,		// y
 		DIR_LEFT, 	             		// dir
 		0x023F,							// type - sprite address in ram.vhdl
 		true,                			// active
@@ -146,7 +147,7 @@ characters blue_car_1 = {
 
 characters blue_car_2 = {
 		0,		// x
-		0,		// y
+		10*16,		// y
 		DIR_LEFT, 	             		// dir
 		0x027F,							// type - sprite address in ram.vhdl
 		true,                			// active
@@ -166,6 +167,28 @@ characters link = {
 		LINK_REG_L,            			// reg_l
 		LINK_REG_H             			// reg_h
 		};
+
+
+characters blue_car_3 = {
+		0,		// x
+		18*16,		// y
+		DIR_LEFT,              			// dir
+		0x023F,  					// type
+		true,                			// active
+		WEAPON_REG_L,            		// reg_l
+		WEAPON_REG_H             		// reg_h
+		};
+
+characters blue_car_4 = {
+		0,								// x
+		18*16,								// y
+		DIR_LEFT,              			// dir
+		0x027F,  					// type
+		true,                			// active
+		GRANDPA_REG_L,            		// reg_l
+		GRANDPA_REG_H             		// reg_h
+		};
+
 
 characters sword = {
 		INITIAL_KIRBY_POSITION_X,		// x
@@ -239,8 +262,10 @@ characters ghost = {
 		};
 
 
-//int walkables[21] = {0, 2, 6, 10, 22, 27, 28, 29, 33, 34, 35, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49};
-int walkables[3] = {0, 1, 2};
+
+//int unwalkable_x[15] = {{3, 0}, {1, 4}, {10, 1}, {11, 1}, {0, 4}, {15, 4}, {7, 7}, {10, 7}, {2 , 13}, {3, 13}, {17, 13}, {2, 14}, {3, 14}, {9, 14}, {16, 14}};
+int unwalkable_x[15] = {3*16, 1*16, 10*16, 11*16, 0*16, 15*16, 7*16, 10*16, 2*16, 3*16, 17*16, 2*16, 3*16, 9*16, 16*16};
+int unwalkable_y[15] = {0*16, 4*16, 1*16, 1*16, 4*16, 4*16, 7*16, 7*16, 13*16, 13*16, 13*16, 14*16, 14*16, 14*16, 14*16};
 
 /*      indexes of the active frame in overworld        */
 int overw_x;
@@ -402,8 +427,7 @@ void load_frame( direction_t dir ) {
 		for ( y = 0; y < FRAME_HEIGHT; y++ ) {
 			for ( x = 0; x < FRAME_WIDTH; x++ ) {
 				addr = XPAR_BATTLE_CITY_PERIPH_0_BASEADDR + 4 * (SCREEN_BASE_ADDRESS + (y+VERTICAL_PADDING)* ( SIDE_PADDING + FRAME_WIDTH + SIDE_PADDING ) + x + SIDE_PADDING);
-				Xil_Out32( addr, frame
-						[ y * FRAME_WIDTH + x ] );
+				Xil_Out32( addr, frame[ y * FRAME_WIDTH + x ] );
 			}
 		}
 }
@@ -1118,18 +1142,18 @@ bool isDoor(int x, int y) {
     return false;
 }
 
-bool tile_walkable(int index, unsigned short* map_frame) {
+/*bool tile_walkable(int index, unsigned short* map_frame) {
 	int i;
 
-	for ( i = 0; i < 20; i++) {
+	for ( i = 0; i < 20; i++) {*/
         /*      check if the current sprite is walkable     */
-		if (  map_frame[index] == SPRITES[walkables[i]] ){ 
+		/*if (  map_frame[index] == SPRITES[walkables[i]] ){
 			return true;
 		}
 	}
 
 	return false;
-}
+}*/
 
 bool obstackles_detection(int x, int y, unsigned short* f, int dir, bool isLink) {
 	int x_left , x_right , y_top , y_bot;
@@ -1183,6 +1207,29 @@ void set_fire() {
 	Xil_Out32(addr,	fire2);
 }
 
+
+bool tree_detection(characters * kirby){
+
+	int i,x,y;
+
+	x = kirby->x;
+	y = kirby->y;
+
+	bool p = false;
+	for(i = 0; i < 15; i++){
+		if(x == unwalkable_x[i] && y == unwalkable_y[i]){
+			y = y + 16;
+			kirby->y = y;
+			p = true;
+			break;
+		}
+	}
+
+	return p;
+
+
+}
+
 /* logika kretanja --> zamniti za link_move dole u battle_city kad bude gotovo */
 
 bool kirby_move(characters * kirby, direction_t direction) {
@@ -1190,16 +1237,31 @@ bool kirby_move(characters * kirby, direction_t direction) {
 	unsigned int y;
 	int i;
 
+
+
 	x = kirby->x;
 	y = kirby->y;
+
+	int temp_new, temp_old;
 
 	if(direction == DIR_UP){
 		if(y < 7*16){
 			kirby->y = y;
 		}else{
-			y--;
-			kirby->y = y;
+				y--;
+				kirby->y = y;
+				//temp_old = y;
+				//temp_new = --y;
+				/*for(i = 0; i < 15; i++) {
+					if(x + 2 == 10*16 + 4  && temp_new + 2 == 7*16 + 4){
+						kirby->y = temp_old;
+						break;
+					} else {
+						kirby->y = temp_new;
+					}
+				}*/
 		}
+
 	}
 
 	if(direction == DIR_DOWN){
@@ -1236,7 +1298,7 @@ bool kirby_move(characters * kirby, direction_t direction) {
 	return false;
 }
 
-void car_move(unsigned int x1, unsigned int x2) {
+/*void car_move(unsigned int x1, unsigned int x2) {
 	int i;
 
 	blue_car_1.x = x2;
@@ -1258,20 +1320,140 @@ void car_move(unsigned int x1, unsigned int x2) {
 	chhar_spawn(&blue_car_2, 0);
 
 
-}
+}*/
+
+void car_move(characters* chhar1, characters* chhar2){
+	int x1,x2;
 
 
 
+	if (chhar1->dir == DIR_LEFT){
+		x1 = chhar1->x;
+		chhar2->x = chhar1->x + 16;
+		x2 = chhar2->x;
 
-void car_animation(){
-
-	int x, y, i;
-
-	for(x = 10*16, y = 28*16; x < 28*16, y > 10*16; x++, y--){
-		car_move(x,y);
+		if(x1 < 10*16){
+			x1 = 28*16;
+			x2 = 29*16;
+			chhar1->x = x1;
+			chhar2->x = x2;
+		} else {
+			x1--;
+			x2--;
+			chhar1->x = x1;
+			chhar2->x = x2;
+		}
 	}
 
+	if (chhar1->dir == DIR_RIGHT){
+
+		x2 = chhar2->x;
+		chhar1->x = chhar2->x - 16;
+		x1 = chhar1->x;
+
+		if(x2 > 29*16){
+			x1 = 10*16;
+			x2 = 11*16;
+			chhar1->x = x1;
+			chhar2->x = x2;
+		} else {
+			x1++;
+			x2++;
+			chhar1->x = x1;
+			chhar2->x = x2;
+		}
+	}
+
+
+	chhar_spawn(chhar1, 0);
+	chhar_spawn(chhar2, 0);
 }
+
+void collision(characters * kirby, characters* car1, characters* car2, characters* car3){
+		/*if((kirby->x == car1->x && kirby->y == car1->y) || (kirby->x == car2->x && kirby->y == car2->y) || (kirby->x == car3->x && kirby->y == car3->y)){
+			kirby->x = INITIAL_KIRBY_POSITION_X;
+			kirby->y = INITIAL_KIRBY_POSITION_Y;
+		}*/
+
+	if(kirby->x+2 >= car1->x+4 && kirby->x+2 <= car1->x+12 && kirby->y+16 >= car1->y + 6 && kirby->y+16 <= car1->y + 16){
+		kirby->x = INITIAL_KIRBY_POSITION_X;
+		kirby->y = INITIAL_KIRBY_POSITION_Y;
+	}else if(kirby->x+14 >= car1->x+4 && kirby->x+14 <= car1->x+12 && kirby->y+16 >= car1->y + 6 && kirby->y+16 <= car1->y + 16){
+		kirby->x = INITIAL_KIRBY_POSITION_X;
+		kirby->y = INITIAL_KIRBY_POSITION_Y;
+	}
+
+	if(kirby->x+2 >= car2->x+4 && kirby->x+2 <= car2->x+12 && kirby->y+16 >= car2->y + 6 && kirby->y+16 <= car2->y + 16){
+		kirby->x = INITIAL_KIRBY_POSITION_X;
+		kirby->y = INITIAL_KIRBY_POSITION_Y;
+	}else if(kirby->x+14 >= car2->x+4 && kirby->x+14 <= car2->x+12 && kirby->y+16 >= car2->y + 6 && kirby->y+16 <= car2->y + 16){
+		kirby->x = INITIAL_KIRBY_POSITION_X;
+		kirby->y = INITIAL_KIRBY_POSITION_Y;
+	}
+
+	if(kirby->x+2 >= car3->x+4 && kirby->x+2 <= car3->x+12 && kirby->y+16 >= car3->y + 6 && kirby->y+16 <= car3->y + 16){
+		kirby->x = INITIAL_KIRBY_POSITION_X;
+		kirby->y = INITIAL_KIRBY_POSITION_Y;
+	}else if(kirby->x+14 >= car3->x+4 && kirby->x+14 <= car3->x+12 && kirby->y+16 >= car3->y + 6 && kirby->y+16 <= car3->y + 16){
+		kirby->x = INITIAL_KIRBY_POSITION_X;
+		kirby->y = INITIAL_KIRBY_POSITION_Y;
+	}
+}
+
+
+
+bool tile_walkable_new(characters* kirby, direction_t direction){
+	int i;
+	unsigned x, y;
+
+		x = kirby->x;
+		y = kirby->y;
+
+		if(direction == DIR_UP){
+			if(y < 7*16){
+				kirby->y = y;
+			}else{
+				y--;
+				for(i = 0; i < 15; i++) {
+					if(x == unwalkable_x[i] && y == unwalkable_y[i]){
+						y++;
+					}
+				kirby->y = y;
+			}
+		}
+
+		if(direction == DIR_DOWN){
+			if(y > 21*16){
+				kirby->y = y;
+			}else{
+				y++;
+				kirby->y = y;
+			}
+		}
+
+		if(direction == DIR_RIGHT){
+			if(x > 29*16){
+				kirby->x = x;
+			}else{
+				x++;
+				kirby->x = x;
+			}
+		}
+
+		if(direction == DIR_LEFT){
+			if(x < 10*16){
+				kirby->x = x;
+			}else{
+				x--;
+				kirby->x = x;
+			}
+		}
+
+
+		chhar_spawn(kirby, 0);
+	}
+}
+
 void battle_city() {
 	unsigned int buttons;
     
@@ -1286,11 +1468,9 @@ void battle_city() {
 	link.x = INITIAL_KIRBY_POSITION_X;
 	link.y = INITIAL_KIRBY_POSITION_Y;
 	link.sprite = LINK_SPRITES_OFFSET;
-	//sword.active = false;
-
 
 	chhar_spawn(&link, 0);
-	//chhar_spawn(&red_car, 0);
+
 
 	while (1) {
 
@@ -1314,24 +1494,23 @@ void battle_city() {
 			d = DIR_ATTACK;
 		}
 
-
-		/*if(enemy_exists == 1 && !inCave) {
-			if(octorok1.active)
-				enemy_move(&octorok1, rnd);
-			if (octorok2.active)
-				enemy_move(&octorok2, rnd1);
-			if (octorok3.active)
-				enemy_move(&octorok3, rnd2);
-			if (octorok4.active)
-				enemy_move(&octorok4, rnd3);
-			if (ghost.active)
-				ghost_move(&ghost, rnd);
+		/*if(tile_walkable_new() == true){
+			kirby_move(&link, d);
 		}*/
 
-		//link_move(&link, &sword, d);
-
 		kirby_move(&link, d);
-		//car_animation();
+
+		if (tree_detection(&link) == true){
+			link.x = INITIAL_KIRBY_POSITION_X;
+			link.y = INITIAL_KIRBY_POSITION_Y;
+		}
+		car_move(&blue_car_1,&blue_car_2);
+		car_move(&red_car_1,&red_car_2);
+		car_move(&blue_car_3,&blue_car_4);
+		collision(&link, &blue_car_1, &red_car_1, &blue_car_3);
+
+
+
 
 		int i;
 		for(i = 0; i < 100000; i++);
