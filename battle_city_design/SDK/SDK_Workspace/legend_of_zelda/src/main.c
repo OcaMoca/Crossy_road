@@ -33,13 +33,13 @@
 
 #include <stdio.h>
 #include "platform.h"
-#include "battle_city.h"
+#include "crossy_road.h"
 
 int main()
 {
     init_platform();
 
-    battle_city();
+    crossy_road();
 
     return 0;
 }
